@@ -8,7 +8,6 @@
     <video id="video" autoplay playsinline></video>
     <canvas id="canvas"></canvas>
     
-    <!-- 객체 정보 표시 -->
     <p id="cupInfo">컵: 없음</p>
     <p id="personInfo">사람: 없음</p>
 
@@ -25,10 +24,13 @@
             video.srcObject = stream;
 
             // MediaPipe Object Detector 로드
-            const { ObjectDetector, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision');
+            const { ObjectDetector, FilesetResolver } = window; // 🔹 import 없이 직접 사용
             const visionFileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
             const detector = await ObjectDetector.createFromOptions(visionFileset, {
-                baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/ssd_mobilenet_v2/float32/1/ssd_mobilenet_v2.tflite" },
+                baseOptions: { 
+                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/ssd_mobilenet_v2/float32/1/ssd_mobilenet_v2.tflite" 
+                },
+                runningMode: "VIDEO",  // 🔹 'VIDEO' 모드 설정
                 scoreThreshold: 0.5
             });
 
@@ -41,20 +43,18 @@
                 let cupX = 0, cupY = 0, personX = 0, personY = 0;
 
                 detections.forEach(obj => {
-                    console.log("감지된 객체:", obj.categoryName); // 감지된 객체 확인
-                    
-                    const targetObjects = ["cup", "person"]; // 감지할 객체 목록
+                    console.log("감지된 객체:", obj.categoryName);
+                    const targetObjects = ["cup", "person"];
 
                     if (targetObjects.includes(obj.categoryName)) {
                         const [x, y, width, height] = obj.boundingBox;
-                        ctx.strokeStyle = (obj.categoryName === "cup") ? "red" : "blue"; // 컵은 빨간색, 사람은 파란색
+                        ctx.strokeStyle = (obj.categoryName === "cup") ? "red" : "blue";
                         ctx.lineWidth = 3;
                         ctx.strokeRect(x, y, width, height);
 
                         let centerX = x + width / 2;
                         let centerY = y + height / 2;
 
-                        // 객체별로 데이터 저장
                         if (obj.categoryName === "cup") {
                             foundCup = true;
                             cupX = Math.round(centerX);
