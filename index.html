@@ -23,8 +23,8 @@
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = stream;
 
-            // MediaPipe Object Detector 로드
-            const { ObjectDetector, FilesetResolver } = window; // 🔹 import 없이 직접 사용
+            // MediaPipe Object Detector 로드 (import 없이 사용)
+            const { ObjectDetector, FilesetResolver } = window;
             const visionFileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
             const detector = await ObjectDetector.createFromOptions(visionFileset, {
                 baseOptions: { 
