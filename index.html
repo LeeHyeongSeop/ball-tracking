@@ -7,15 +7,18 @@
 <body>
     <video id="video" autoplay playsinline></video>
     <canvas id="canvas"></canvas>
-
-    <!-- 데이터를 앱인벤터로 보내는 버튼 -->
-    <button id="sendButton">앱인벤터로 데이터 보내기</button>
     
+    <!-- 객체 정보 표시 -->
+    <p id="objectName">객체: 없음</p>
+    <p id="objectCoords">좌표: X=0, Y=0</p>
+
     <script>
         async function startTracking() {
             const video = document.getElementById("video");
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
+            const objectNameText = document.getElementById("objectName");
+            const objectCoordsText = document.getElementById("objectCoords");
 
             // 카메라 설정
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -33,17 +36,35 @@
                 const detections = await detector.detectForVideo(video, performance.now());
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
+                let foundObject = false;
+
                 detections.forEach(obj => {
-                    if (obj.categoryName === "cup") { // 공(Sports Ball)만 추적
+                    console.log("감지된 객체:", obj.categoryName); // 어떤 객체가 감지되는지 확인
+                    
+                    if (obj.categoryName === "cup") { // 컵만 감지
+                        foundObject = true;
                         const [x, y, width, height] = obj.boundingBox;
+                        ctx.strokeStyle = "red";
+                        ctx.lineWidth = 3;
                         ctx.strokeRect(x, y, width, height);
+
                         let centerX = x + width / 2;
                         let centerY = y + height / 2;
 
-                        // 좌표를 앱인벤터로 전송
-                        window.AppInventor.setWebViewString(centerX + "," + centerY);
+                        // 웹 페이지에 객체 정보 표시
+                        objectNameText.innerText = "객체: " + obj.categoryName;
+                        objectCoordsText.innerText = `좌표: X=${Math.round(centerX)}, Y=${Math.round(centerY)}`;
+
+                        // 앱인벤터로 좌표 데이터 전송
+                        window.AppInventor.setWebViewString(obj.categoryName + "," + Math.round(centerX) + "," + Math.round(centerY));
                     }
                 });
+
+                // 컵이 감지되지 않으면 "없음"으로 표시
+                if (!foundObject) {
+                    objectNameText.innerText = "객체: 없음";
+                    objectCoordsText.innerText = "좌표: X=0, Y=0";
+                }
 
                 requestAnimationFrame(detectObjects);
             }
@@ -52,13 +73,6 @@
         }
 
         startTracking();
-        // 앱인벤터로 임의의 데이터를 보내는 함수
-        function sendDataToAppInventor() {
-            window.AppInventor.setWebViewString("Hello, App Inventor!");
-        }
-
-        // 버튼 클릭 시 데이터 전송
-        document.getElementById("sendButton").addEventListener("click", sendDataToAppInventor);
     </script>
 </body>
 </html>
