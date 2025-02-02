@@ -9,16 +9,16 @@
     <canvas id="canvas"></canvas>
     
     <!-- 객체 정보 표시 -->
-    <p id="objectName">객체: 없음</p>
-    <p id="objectCoords">좌표: X=0, Y=0</p>
+    <p id="cupInfo">컵: 없음</p>
+    <p id="personInfo">사람: 없음</p>
 
     <script>
         async function startTracking() {
             const video = document.getElementById("video");
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
-            const objectNameText = document.getElementById("objectName");
-            const objectCoordsText = document.getElementById("objectCoords");
+            const cupInfo = document.getElementById("cupInfo");
+            const personInfo = document.getElementById("personInfo");
 
             // 카메라 설정
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -36,35 +36,43 @@
                 const detections = await detector.detectForVideo(video, performance.now());
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                let foundObject = false;
+                let foundCup = false;
+                let foundPerson = false;
+                let cupX = 0, cupY = 0, personX = 0, personY = 0;
 
                 detections.forEach(obj => {
-                    console.log("감지된 객체:", obj.categoryName); // 어떤 객체가 감지되는지 확인
+                    console.log("감지된 객체:", obj.categoryName); // 감지된 객체 확인
                     
-                    if (obj.categoryName === "cup") { // 컵만 감지
-                        foundObject = true;
+                    const targetObjects = ["cup", "person"]; // 감지할 객체 목록
+
+                    if (targetObjects.includes(obj.categoryName)) {
                         const [x, y, width, height] = obj.boundingBox;
-                        ctx.strokeStyle = "red";
+                        ctx.strokeStyle = (obj.categoryName === "cup") ? "red" : "blue"; // 컵은 빨간색, 사람은 파란색
                         ctx.lineWidth = 3;
                         ctx.strokeRect(x, y, width, height);
 
                         let centerX = x + width / 2;
                         let centerY = y + height / 2;
 
-                        // 웹 페이지에 객체 정보 표시
-                        objectNameText.innerText = "객체: " + obj.categoryName;
-                        objectCoordsText.innerText = `좌표: X=${Math.round(centerX)}, Y=${Math.round(centerY)}`;
-
-                        // 앱인벤터로 좌표 데이터 전송
-                        window.AppInventor.setWebViewString(obj.categoryName + "," + Math.round(centerX) + "," + Math.round(centerY));
+                        // 객체별로 데이터 저장
+                        if (obj.categoryName === "cup") {
+                            foundCup = true;
+                            cupX = Math.round(centerX);
+                            cupY = Math.round(centerY);
+                        } else if (obj.categoryName === "person") {
+                            foundPerson = true;
+                            personX = Math.round(centerX);
+                            personY = Math.round(centerY);
+                        }
                     }
                 });
 
-                // 컵이 감지되지 않으면 "없음"으로 표시
-                if (!foundObject) {
-                    objectNameText.innerText = "객체: 없음";
-                    objectCoordsText.innerText = "좌표: X=0, Y=0";
-                }
+                // 웹페이지에 객체 정보 업데이트
+                cupInfo.innerText = foundCup ? `컵: X=${cupX}, Y=${cupY}` : "컵: 없음";
+                personInfo.innerText = foundPerson ? `사람: X=${personX}, Y=${personY}` : "사람: 없음";
+
+                // 앱인벤터로 데이터 전송
+                window.AppInventor.setWebViewString(`cup,${cupX},${cupY};person,${personX},${personY}`);
 
                 requestAnimationFrame(detectObjects);
             }
