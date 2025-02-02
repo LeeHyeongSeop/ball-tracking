@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>MediaPipe Object Tracking</title>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>컵 & 사람 감지</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest"></script>
 </head>
 <body>
     <video id="video" autoplay playsinline></video>
@@ -23,10 +25,9 @@
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = stream;
 
-            // MediaPipe Object Detector 로드 (import 없이 사용)
-            const { ObjectDetector, FilesetResolver } = window;
-            const visionFileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
-            const detector = await ObjectDetector.createFromOptions(visionFileset, {
+            // MediaPipe Object Detector 로드
+            const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+            const detector = await window.ObjectDetector.createFromOptions(vision, {
                 baseOptions: { 
                     modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/ssd_mobilenet_v2/float32/1/ssd_mobilenet_v2.tflite" 
                 },
