@@ -26,19 +26,20 @@
             video.srcObject = stream;
 
             // MediaPipe Object Detector 로드
-            const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
-            const detector = await window.ObjectDetector.createFromOptions(vision, {
+            const visionFileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+            const detector = await ObjectDetector.createFromOptions(visionFileset, {
                 baseOptions: { 
-                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/ssd_mobilenet_v2/float32/1/ssd_mobilenet_v2.tflite" 
+                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/ssd_mobilenet_v2/float32/1/ssd_mobilenet_v2.tflite"
                 },
-                runningMode: "VIDEO",  // 🔹 'VIDEO' 모드 설정
+                runningMode: "VIDEO",  // 'VIDEO' 모드 설정
                 scoreThreshold: 0.5
             });
 
             async function detectObjects() {
                 const detections = await detector.detectForVideo(video, performance.now());
+                console.log(detections);  // 감지된 객체 확인
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
+
                 let foundCup = false;
                 let foundPerson = false;
                 let cupX = 0, cupY = 0, personX = 0, personY = 0;
