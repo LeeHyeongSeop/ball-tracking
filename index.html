@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MediaPipe Object Tracking</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision"></script>
+</head>
+<body>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    
+    <script>
+        async function startTracking() {
+            const video = document.getElementById("video");
+            const canvas = document.getElementById("canvas");
+            const ctx = canvas.getContext("2d");
+
+            // 카메라 설정
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+
+            // MediaPipe Object Detector 로드
+            const { ObjectDetector, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision');
+            const visionFileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+            const detector = await ObjectDetector.createFromOptions(visionFileset, {
+                baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/ssd_mobilenet_v2/float32/1/ssd_mobilenet_v2.tflite" },
+                scoreThreshold: 0.5
+            });
+
+            async function detectObjects() {
+                const detections = await detector.detectForVideo(video, performance.now());
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                detections.forEach(obj => {
+                    if (obj.categoryName === "sports ball") { // 공(Sports Ball)만 추적
+                        const [x, y, width, height] = obj.boundingBox;
+                        ctx.strokeRect(x, y, width, height);
+                        let centerX = x + width / 2;
+                        let centerY = y + height / 2;
+
+                        // 좌표를 앱인벤터로 전송
+                        window.AppInventor.setWebViewString(centerX + "," + centerY);
+                    }
+                });
+
+                requestAnimationFrame(detectObjects);
+            }
+
+            detectObjects();
+        }
+
+        startTracking();
+    </script>
+</body>
+</html>
